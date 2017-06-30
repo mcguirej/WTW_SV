@@ -1,0 +1,38 @@
+function [] = expDelay(dist,plotColor)
+% plot expected total delay as time elapses
+% also plot the current time, for reference
+% Input:
+%   dist is a 2-col matrix. col1 = time (sec), col2 = probability mass
+%
+% expDelay is a step function, changing only at timepoints where p>0
+
+delayX = [0; dist(:,1)];
+delayF = nan(size(delayX));
+
+% compute expected delay at each timepoint
+% (assuming only *later* points are still possible)
+for i = 1:(length(delayX) - 1)
+    
+    remaining_tmpts = dist(i:end,1);
+    remaining_pmass = dist(i:end,2);
+    delayF(i) = sum(remaining_tmpts.*remaining_pmass)/sum(remaining_pmass);
+    
+end % loop over timepoints
+
+% fill in the final delay point
+delayF(end) = delayF(end-1);
+
+% draw plot
+figure(gcf+1);
+h1 = stairs(delayX,delayF,'k-','LineWidth',2);
+set(h,'Color',plotColor);
+
+% also draw elapsed time
+h2 = plot(delayX([1,end]),delayX([1,end]),'
+
+% plot formatting
+set(gca,'Box','off','FontSize',16);
+xlabel('Time elapsed (sec)');
+ylabel('Time (sec)');
+
+

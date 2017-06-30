@@ -1,0 +1,62 @@
+function [] = haz_dualPlot(dist,plotColor,tGrid,hazContin)
+% plot the hazard function for 2 discrete distributions
+% Input:
+%   dist and plotColor are both cell arrays
+%   each element of dist is a 2-col matrix; col1=time (s), col2=prob mass
+%
+%   tGrid and hazContin are optional
+%   they are cell arrays containing a time grid and hazard-fx values
+%   if provided, the continuous hazard function will be plotted (in
+%   rescaled form) together with the discrete fx.
+
+% set up plot
+figure(gcf+1); clf; hold on;
+
+% calculate the hazard function from each probability mass fx
+nDist = length(dist);
+haz = cell(nDist,1);
+for d = 1:nDist
+    haz{d}(:,1) = dist{d}(:,1); % copy over the time values
+    cdf = cumsum(dist{d}(:,2)); % cumulative probability
+    cdf = [0; cdf(1:(end-1))]; % shifted
+    haz{d}(:,2) = dist{d}(:,2)./(1-cdf);
+end
+
+% % gridlines at reward times
+% ymax = 0.55;
+% hold on;
+% for i = 1:size(dist,1)
+%     plot(dist(i,1)*[1,1],[0,ymax],'-','LineWidth',0.5,'Color',0.8*[1,1,1]);
+% end
+
+% continuous hazard functions if provided
+if nargin>2
+    lineStyles = {'-', '--'};
+    scaleFactor = 5;
+    fprintf('Note: continuous hazard fx is scaled by a factor of %1.2f\n',scaleFactor);
+    for d = 1:nDist
+        h = plot(tGrid{d},hazContin{d}.*scaleFactor,lineStyles{d},'LineWidth',2);
+        % fade the specified color by mixing with white
+        fadeFrac = 0.7;
+        fadedCol = fadeFrac*[1,1,1] + (1-fadeFrac)*plotColor{d};
+        set(h,'Color',fadedCol);
+    end
+end
+
+% stem plot of each distribution
+xShift = 0.5*[-1, 1]; % the 2 distribs will be shifted on the x axis
+for d = 1:nDist
+    h = stem(haz{d}(:,1)+xShift(d),haz{d}(:,2),'.-','LineWidth',1,'MarkerSize',8);
+    set(h,'Color',plotColor{d});
+end
+
+% plot formatting
+set(gcf,'Units','inches','Position',[7,6,2,1.5]); % 2 x 1.5"
+set(gca,'Position',[0.3, 0.3, 0.6, 0.6]);
+set(gca,'FontSize',7,'Box','off','Layer','top');
+set(gca,'XLim',[0,45],'XTick',10:10:40,'YLim',[0, 1],'YTick',0:0.2:1);
+xlabel('Delay (s)');
+ylabel('Hazard rate');
+
+
+
